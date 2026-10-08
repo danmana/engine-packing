@@ -15,10 +15,12 @@ export interface Packing {
   pairs: [number, number][];
   /** Mean engine position (thrust centre), from full-precision coordinates. */
   offset: [number, number];
-  kind: 'optimal' | 'rings';
+  kind: 'optimal' | 'real';
+  /** 'optimal', or the rocket whose layout this is. */
+  id: string;
 }
 
-type RawPacking = Omit<Packing, 'kind'> & { wall: number[] };
+type RawPacking = Omit<Packing, 'kind' | 'id'> & { wall: number[] };
 
 export const PACKINGS: Packing[] = (raw as RawPacking[]).map((p) => ({
   n: p.n,
@@ -31,6 +33,7 @@ export const PACKINGS: Packing[] = (raw as RawPacking[]).map((p) => ({
   pairs: p.pairs,
   offset: p.offset,
   kind: 'optimal',
+  id: 'optimal',
 }));
 
 export const MAX_N = PACKINGS.length;
@@ -40,40 +43,6 @@ export const BAY_RADIUS = 4.25;
 export const BOOSTER_RADIUS = 4.5;
 /** Assumed height of the centre of mass above the engines, for gimbal angles. */
 export const LEVER_ARM = 40;
-
-/**
- * Super Heavy's real arrangement is three concentric groups: 3 centre,
- * 10 middle, 20 outer. This approximation sizes the engines so the outer ring
- * of 20 touches the wall and its neighbours.
- */
-export function superHeavyRings(): Packing {
-  const s = Math.sin(Math.PI / 20);
-  const r = s / (1 + s);
-  const rings = [
-    { count: 3, radius: 0.17, phase: Math.PI / 2 },
-    { count: 10, radius: 0.5, phase: Math.PI / 2 + Math.PI / 10 },
-    { count: 20, radius: 1 - r, phase: Math.PI / 2 },
-  ];
-  const pts: number[] = [];
-  for (const ring of rings) {
-    for (let i = 0; i < ring.count; i++) {
-      const a = ring.phase + (i / ring.count) * Math.PI * 2;
-      pts.push(ring.radius * Math.cos(a), ring.radius * Math.sin(a));
-    }
-  }
-  return {
-    n: 33,
-    r,
-    pts,
-    proven: false,
-    rotation: 1,
-    mirrors: [Math.PI / 2],
-    rattlers: [],
-    pairs: [],
-    offset: [0, 0],
-    kind: 'rings',
-  };
-}
 
 export interface Balance {
   active: number;

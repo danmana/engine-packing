@@ -68,7 +68,7 @@ body {
   grid-template-rows: auto 1fr auto auto auto auto;
   grid-template-areas:
     'head views'
-    '. .'
+    '. rockets'
     'readout switch'
     'readout plan'
     'readout actions'
@@ -81,6 +81,7 @@ body {
 }
 
 .readout,
+.rockets,
 .plan-wrap .caption,
 .masthead,
 .scale,
@@ -253,8 +254,63 @@ a:hover {
 }
 
 /* Only phones collapse the details; elsewhere they're always shown. */
-.details-toggle {
+.details-toggle,
+.rockets-toggle {
   display: none;
+}
+
+/* Real rockets: a list to jump to each one's engine count and layout. */
+.rockets {
+  grid-area: rockets;
+  justify-self: end;
+  align-self: start;
+  margin-top: 40px;
+}
+
+.rockets-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  text-align: right;
+  color: var(--steel);
+}
+
+.rockets ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rockets button {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  width: 100%;
+  padding: 3px 0;
+  background: none;
+  border: 0;
+  font-size: 14px;
+  font-weight: 480;
+  line-height: 1.35;
+  color: var(--cream-dim);
+}
+
+.rockets .engines {
+  min-width: 2ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--steel);
+}
+
+.rockets button:hover {
+  color: var(--cream);
+}
+
+.rockets button[aria-current='true'] {
+  color: var(--cream);
+}
+
+.rockets button[aria-current='true'] .engines {
+  color: var(--ember);
 }
 
 /* Controls ---------------------------------------------------------------- */
@@ -553,7 +609,14 @@ button {
   outline-offset: 6px;
 }
 
+.tip span {
+  margin-left: 4px;
+  font-weight: 450;
+  color: var(--cream-dim);
+}
+
 .tip {
+  white-space: nowrap;
   position: absolute;
   top: -22px;
   transform: translateX(-50%);
@@ -606,12 +669,13 @@ button {
     grid-template-areas:
       'head head'
       'views views'
+      'rockets rockets'
       '. .'
       'switch switch'
       'readout plan'
       'ruler ruler'
       'actions actions';
-    grid-template-rows: auto auto 1fr auto auto auto auto;
+    grid-template-rows: auto auto auto 1fr auto auto auto auto;
     column-gap: 16px;
   }
 
@@ -634,6 +698,44 @@ button {
 
   .switch {
     justify-self: start;
+  }
+
+  .rockets-toggle {
+    display: inline-block;
+    margin-left: 12px;
+  }
+
+  .rockets-toggle[aria-expanded='true'] {
+    color: var(--cream);
+    border-bottom-color: var(--cream);
+  }
+
+  .rockets {
+    display: none;
+    justify-self: stretch;
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 4px;
+    background: rgba(3, 11, 34, 0.78);
+  }
+
+  .rockets.open {
+    display: block;
+  }
+
+  .rockets-title {
+    display: none;
+  }
+
+  .rockets ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 24px;
+  }
+
+  .rockets button {
+    justify-content: space-between;
+    padding: 7px 0;
   }
 
   .numeral {

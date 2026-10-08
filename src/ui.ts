@@ -1,4 +1,5 @@
 import { BAY_RADIUS, LEVER_ARM, MAX_N, PACKINGS, isBalanced, type Balance, type Packing } from './data';
+import { ROCKETS, rocketById, rocketsWith } from './rockets';
 import type { View } from './scene';
 
 export interface UiHandlers {
@@ -8,7 +9,9 @@ export interface UiHandlers {
   sound(): void;
   toggleEngine(i: number): void;
   fireAll(): void;
-  layout(kind: Packing['kind']): void;
+  /** 'optimal' or a rocket id, for the current engine count. */
+  layout(id: string): void;
+  rocket(id: string): void;
 }
 
 const $ = <T extends Element = HTMLElement>(sel: string) => document.querySelector(sel) as T;
@@ -37,9 +40,8 @@ export function symmetryOf(p: Packing) {
   return mirrored ? 'Mirror only' : 'None';
 }
 
-/** Super Heavy flies 33 engines; the ruler marks that count. */
+/** Super Heavy flies 33 engines; the ruler labels that count. */
 const SUPER_HEAVY = 33;
-const OPTIMAL_33 = PACKINGS[SUPER_HEAVY - 1].r;
 
 // Storage can be unavailable (private mode, blocked site data); the default then applies.
 function remembered(key: string) {
@@ -68,6 +70,9 @@ export class Ui {
   private fireAllBtn = $<HTMLButtonElement>('#fire-all');
   private soundBtn = $<HTMLButtonElement>('#sound');
   private layoutSwitch = $('#layout-switch');
+  private rockets = $('#rockets');
+  private rocketsToggle = $<HTMLButtonElement>('#rockets-toggle');
+  private rocketButtons: HTMLButtonElement[] = [];
   private readout = $('#readout');
   private detailsToggle = $<HTMLButtonElement>('#details-toggle');
   private announceTimer = 0;
@@ -83,13 +88,48 @@ export class Ui {
     document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((b) =>
       b.addEventListener('click', () => on.view(b.dataset.view as View))
     );
-    this.layoutSwitch.querySelectorAll<HTMLButtonElement>('[data-layout]').forEach((b) =>
-      b.addEventListener('click', () => on.layout(b.dataset.layout as Packing['kind']))
-    );
+    this.layoutSwitch.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest<HTMLElement>('[data-layout]');
+      if (b) on.layout(b.dataset.layout!);
+    });
+    this.buildRocketList();
     this.plan.addEventListener('click', (e) => {
       const el = (e.target as Element).closest('[data-i]');
       if (el) on.toggleEngine(Number(el.getAttribute('data-i')));
     });
+  }
+
+  private buildRocketList() {
+    const list = $('#rocket-list');
+    for (const r of ROCKETS) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.rocket = r.id;
+      b.innerHTML = `<span>${r.name}</span><span class="engines">${r.n}</span>`;
+      b.setAttribute('aria-label', `${r.name}, ${r.n} engines`);
+      b.addEventListener('click', () => {
+        this.on.rocket(r.id);
+        this.setRocketsOpen(false);
+      });
+      const li = document.createElement('li');
+      li.append(b);
+      list.append(li);
+      this.rocketButtons.push(b);
+    }
+    this.rocketsToggle.addEventListener('click', () =>
+      this.setRocketsOpen(this.rocketsToggle.getAttribute('aria-expanded') !== 'true')
+    );
+    // Tapping anywhere else closes it.
+    document.addEventListener('pointerdown', (e) => {
+      const t = e.target as Node;
+      if (!this.rockets.contains(t) && !this.rocketsToggle.contains(t)) this.setRocketsOpen(false);
+    });
+  }
+
+  /** Phones only: the rocket list opens under the top bar. */
+  private setRocketsOpen(open: boolean) {
+    this.rockets.classList.toggle('open', open);
+    this.rocketsToggle.setAttribute('aria-expanded', String(open));
   }
 
   private buildRuler() {
@@ -101,17 +141,17 @@ export class Ui {
       const h = Math.min(1, Math.max(0, (densities[i] - 0.6) / 0.25));
       t.style.setProperty('--h', h.toFixed(3));
       if (isBalanced(p)) t.classList.add('balanced');
+      if (rocketsWith(p.n).length) t.classList.add('landmark');
       ticks.append(t);
       this.ticks.push(t);
     });
-    // A labelled marker so people can find the real booster's engine count.
-    this.ticks[SUPER_HEAVY - 1].classList.add('landmark');
+    // Real rockets get orange ticks; Super Heavy also gets a label.
     this.landmark.type = 'button';
     this.landmark.className = 'ruler-label';
     this.landmark.textContent = 'Super Heavy';
-    this.landmark.setAttribute('aria-label', `Go to ${SUPER_HEAVY} engines, the count on Super Heavy`);
+    this.landmark.setAttribute('aria-label', `Show Super Heavy's ${SUPER_HEAVY}-engine layout`);
     this.landmark.style.left = `${((SUPER_HEAVY - 0.5) / MAX_N) * 100}%`;
-    this.landmark.addEventListener('click', () => this.on.count(SUPER_HEAVY));
+    this.landmark.addEventListener('click', () => this.on.rocket('super-heavy'));
     ticks.before(this.landmark);
 
     for (const n of [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].filter((n) => n <= MAX_N)) {
@@ -139,7 +179,8 @@ export class Ui {
       }
       this.ticks[n - 1].classList.add('hover');
       this.tip.hidden = false;
-      this.tip.textContent = String(n);
+      const names = rocketsWith(n).map((r) => r.name);
+      this.tip.innerHTML = names.length ? `${n} <span>${names.join(', ')}</span>` : String(n);
       this.tip.style.left = `${((n - 0.5) / MAX_N) * 100}%`;
     };
     ticks.addEventListener('pointerdown', (e) => {
@@ -160,13 +201,29 @@ export class Ui {
     this.range.addEventListener('input', () => this.on.count(Number(this.range.value)));
   }
 
-  setCount(n: number) {
+  setCount(n: number, layout: string) {
     this.ticks.forEach((t, i) => t.classList.toggle('on', i === n - 1));
     this.range.value = String(n);
     $('#n').textContent = String(n);
     $('#unit').textContent = n === 1 ? 'engine' : 'engines';
-    this.layoutSwitch.hidden = n !== SUPER_HEAVY;
     this.landmark.classList.toggle('on', n === SUPER_HEAVY);
+
+    // Offer each real layout flown with this many engines.
+    const own = rocketsWith(n).filter((r) => r.layout);
+    this.layoutSwitch.hidden = own.length === 0;
+    this.layoutSwitch.setAttribute('aria-label', `Layout for ${n} engines`);
+    this.layoutSwitch.innerHTML = [{ id: 'optimal', name: 'Optimal packing' }, ...own]
+      .map(
+        (o) =>
+          `<button type="button" role="radio" aria-checked="${o.id === layout}" data-layout="${o.id}">${o.name}</button>`
+      )
+      .join('');
+
+    for (const b of this.rocketButtons) {
+      const r = rocketById(b.dataset.rocket!)!;
+      const current = r.n === n && (r.layout ? layout === r.id : layout === 'optimal');
+      b.setAttribute('aria-current', String(current));
+    }
   }
 
   /** Phones only: show or hide the stats under the engine count. */
@@ -195,16 +252,13 @@ export class Ui {
 
   render(p: Packing, b: Balance, lit: ReadonlySet<number>) {
     const partial = lit.size > 0 && lit.size < p.n;
-    this.layoutSwitch.querySelectorAll<HTMLButtonElement>('[data-layout]').forEach((el) =>
-      el.setAttribute('aria-checked', String(el.dataset.layout === p.kind))
-    );
 
     // First row describes the packing, second row its balance.
     const rows: [string, string][] = [
       ['Nozzle exit', `${(2 * p.r * BAY_RADIUS).toFixed(2)} m`],
       ['Area filled', `${(p.n * p.r * p.r * 100).toFixed(1)} %`],
       ['Symmetry', symmetryOf(p)],
-      ['Packing', p.kind === 'rings' ? 'Real-world rings' : p.proven ? 'Proven optimal' : 'Best known'],
+      ['Packing', p.kind === 'real' ? 'Real pattern' : p.proven ? 'Proven optimal' : 'Best known'],
       ['Thrust off-centre', formatOffset(b.offset)],
       ['Gimbal to correct', formatAngle(b.gimbal)],
     ];
@@ -217,10 +271,8 @@ export class Ui {
 
     let note = `Gimbal assumes the centre of mass sits ${LEVER_ARM} m above the engines.`;
     if (b.gimbal > 10) note = 'That is more gimbal than most engines can manage.';
-    else if (p.kind === 'rings')
-      note = `Super Heavy’s 3 + 10 + 20 rings, approximated. The optimal packing fits nozzles ${Math.round(
-        (OPTIMAL_33 / p.r - 1) * 100
-      )} % wider in the same base.`;
+    else if (p.kind === 'real') note = rocketById(p.id)?.note ?? note;
+    else if (rocketsWith(p.n).some((r) => !r.layout)) note = rocketsWith(p.n).find((r) => !r.layout)!.note;
     else if (p.rattlers.length && !partial)
       note = 'Rattlers are engines the packing doesn’t lock in place. Where they sit shifts the balance.';
     $('#note').textContent = note;

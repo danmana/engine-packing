@@ -29,8 +29,32 @@ one at a time from cold.
   The angle shown assumes the centre of mass is 40 m above the engines.
 - **Rattlers.** Many optimal packings have loose circles that the others don't
   lock in place. Where they sit moves the thrust centre, so they're flagged.
-- **Super Heavy rings.** At n = 33 you can compare against an approximation of
-  Super Heavy's real 3 + 10 + 20 ring layout.
+- **Real rockets.** A list of real first stages jumps to their engine count.
+  Where a rocket's pattern differs from the optimal packing, a switch shows it
+  in the same engine bay, with engines sized to the largest that fit the
+  pattern, so you can compare like with like:
+
+  | Rocket        | Engines | Pattern                                    | Optimal fits nozzles |
+  | ------------- | ------: | ------------------------------------------ | -------------------: |
+  | Saturn V      |       5 | 4 gimbaled around 1 fixed                  |           11 % wider |
+  | Saturn I / IB |       8 | inner square of 4, outer square turned 45° |           57 % wider |
+  | Falcon 9 v1.0 |       9 | 3 × 3 grid                                 |            6 % wider |
+  | N1            |      30 | 24 around the rim, 6 inside (approximated) |           40 % wider |
+  | Super Heavy   |      33 | 3 + 10 + 20 rings (approximated)           |           14 % wider |
+
+  Some rockets already fly the optimal pattern: Proton (a ring of 6), New
+  Glenn (6 around 1), and Falcon 9's Octaweb and Electron (8 around 1).
+
+  Sources: [S-IC](https://en.wikipedia.org/wiki/S-IC),
+  [S-I](https://en.wikipedia.org/wiki/S-I) (ring radii from NASA's stage
+  documentation), [Falcon 9 v1.0](https://en.wikipedia.org/wiki/Falcon_9_v1.0),
+  [Falcon 9 v1.1 / Octaweb](https://en.wikipedia.org/wiki/Falcon_9_v1.1),
+  [Rutherford](https://en.wikipedia.org/wiki/Rutherford_(rocket_engine)),
+  [New Glenn boosters](https://en.wikipedia.org/wiki/List_of_New_Glenn_boosters),
+  [Proton first stage](https://russianspaceweb.com/proton_stage1.html),
+  [N1 Block A](https://russianspaceweb.com/n1_a.html). The N1's ring radii and
+  Super Heavy's inner ring radii aren't published there, so those are
+  estimates.
 
 ## Controls
 
@@ -41,7 +65,8 @@ one at a time from cold.
 | Orbit and zoom         | Drag and scroll (pinch on touch)             |
 | Turn one engine on/off | Click it in 3D or on the plan                |
 | Fire all engines       | The Fire all button, or A                    |
-| Jump to a layout       | Link to `#n`, for example `/#61`             |
+| Jump to a layout       | Link to `#n` or `#n/rocket`, e.g. `/#30/n1`  |
+| Jump to a real rocket  | The Real rockets list (Rockets on phones)    |
 
 ## Development
 

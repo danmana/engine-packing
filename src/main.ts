@@ -1,7 +1,8 @@
 import '@fontsource-variable/archivo/wdth.css';
 import './style.css';
 import * as THREE from 'three';
-import { MAX_N, PACKINGS, balanceOf, superHeavyRings, type Packing } from './data';
+import { MAX_N, PACKINGS, balanceOf } from './data';
+import { rocketById } from './rockets';
 import { Stage, type View } from './scene';
 import { EngineCluster } from './engines';
 import { Smoke } from './smoke';
@@ -18,22 +19,26 @@ const smoke = new Smoke();
 const rumble = new Rumble();
 stage.scene.add(engines.group, smoke.mesh);
 
-const rings = superHeavyRings();
 const state = {
-  n: initialCount(),
-  layout: 'optimal' as Packing['kind'],
+  n: 33,
+  /** 'optimal', or the id of a rocket whose own layout is shown. */
+  layout: 'optimal',
   /** Engines that are on, by packing index. Empty means shut down. */
   lit: new Set<number>(),
   sound: true,
 };
 let now = 0;
 
-function initialCount() {
-  const m = location.hash.match(/^#(\d+)/);
-  return m ? Math.min(MAX_N, Math.max(1, Number(m[1]))) : 33;
+/** Links look like #33 or #33/super-heavy. */
+function readHash() {
+  const m = location.hash.match(/^#(\d+)(?:\/([\w.-]+))?/);
+  const n = m ? Math.min(MAX_N, Math.max(1, Number(m[1]))) : 33;
+  const rocket = m?.[2] ? rocketById(m[2]) : undefined;
+  return { n, layout: rocket?.layout && rocket.n === n ? rocket.id : 'optimal' };
 }
+Object.assign(state, readHash());
 
-const packing = () => (state.n === 33 && state.layout === 'rings' ? rings : PACKINGS[state.n - 1]);
+const packing = () => rocketById(state.layout)?.layout ?? PACKINGS[state.n - 1];
 
 const allEngines = () => new Set(Array.from({ length: packing().n }, (_, i) => i));
 
@@ -49,16 +54,25 @@ function applyLayout(instant = false) {
   engines.setLayout(packing(), now, instant);
   state.lit = running ? allEngines() : new Set();
   engines.setLit(state.lit, now);
-  ui.setCount(state.n);
+  ui.setCount(state.n, state.layout);
   refresh();
-  history.replaceState(null, '', `#${state.n}`);
+  history.replaceState(null, '', state.layout === 'optimal' ? `#${state.n}` : `#${state.n}/${state.layout}`);
 }
 
-function setCount(n: number) {
+function show(n: number, layout = 'optimal') {
   n = Math.min(MAX_N, Math.max(1, n));
-  if (n === state.n) return;
+  if (n === state.n && layout === state.layout) return;
   state.n = n;
+  state.layout = layout;
   applyLayout();
+}
+
+const setCount = (n: number) => show(n);
+
+/** Jump to a rocket: its own layout if it has one, else the optimal packing it flies. */
+function showRocket(id: string) {
+  const rocket = rocketById(id);
+  if (rocket) show(rocket.n, rocket.layout ? rocket.id : 'optimal');
 }
 
 /** Fire every engine, or shut everything down if anything is running. */
@@ -100,11 +114,8 @@ const ui = new Ui({
   },
   toggleEngine,
   fireAll,
-  layout(kind) {
-    if (kind === state.layout) return;
-    state.layout = kind;
-    applyLayout();
-  },
+  layout: (id) => show(state.n, id),
+  rocket: showRocket,
 });
 
 applyLayout(true);
@@ -162,7 +173,10 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-window.addEventListener('hashchange', () => setCount(initialCount()));
+window.addEventListener('hashchange', () => {
+  const { n, layout } = readHash();
+  show(n, layout);
+});
 
 /** Fire light intensity (candela) at full thrust. */
 const FIRE_LIGHT = 80;

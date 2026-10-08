@@ -42,6 +42,14 @@
         <button type="button" data-view="side" aria-pressed="true">Side</button>
         <button type="button" data-view="below" aria-pressed="false">Below</button>
         <button type="button" id="sound" aria-pressed="true">Sound on</button>
+        <button type="button" id="rockets-toggle" class="rockets-toggle" aria-expanded="false" aria-controls="rockets">
+          Rockets
+        </button>
+      </nav>
+
+      <nav class="rockets" id="rockets" aria-label="Real rockets">
+        <p class="rockets-title">Real rockets</p>
+        <ul id="rocket-list"></ul>
       </nav>
 
       <section class="readout" id="readout" aria-label="Layout details">
@@ -59,10 +67,7 @@
         </div>
       </section>
 
-      <div class="switch" id="layout-switch" role="radiogroup" aria-label="Layout for 33 engines" hidden>
-        <button type="button" role="radio" aria-checked="true" data-layout="optimal">Optimal packing</button>
-        <button type="button" role="radio" aria-checked="false" data-layout="rings">Super Heavy rings</button>
-      </div>
+      <div class="switch" id="layout-switch" role="radiogroup" hidden></div>
 
       <aside class="plan-wrap" aria-label="Engine plan">
         <svg id="plan" viewBox="-1.1 -1.1 2.2 2.2" role="img"></svg>
@@ -82,7 +87,7 @@
         <div class="ticks" id="ticks" aria-hidden="true"></div>
         <span id="tip" class="tip" aria-hidden="true" hidden></span>
         <div class="scale" id="scale" aria-hidden="true"></div>
-        <p class="legend">Taller ticks pack denser. Dots mark layouts with perfectly centred thrust.</p>
+        <p class="legend">Taller ticks pack denser, dots mark perfectly centred thrust, orange ticks are real rockets.</p>
       </div>
     </main>
 
