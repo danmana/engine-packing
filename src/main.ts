@@ -9,6 +9,10 @@ import { Smoke } from './smoke';
 import { Rumble } from './audio';
 import { Ui } from './ui';
 import { noiseTexture } from './textures';
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Analytics
+inject();
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
