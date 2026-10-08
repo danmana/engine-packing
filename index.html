@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Engine packing</title>
+    <meta
+      name="description"
+      content="The densest known packings of n circles in a circle, laid out as rocket engines. Scrub through the layouts, fire them, and check how balanced the thrust is."
+    />
+    <meta name="theme-color" content="#061847" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content="Engine packing" />
+    <meta
+      property="og:description"
+      content="Optimal circle packings as rocket engine layouts. Fire them and check the balance."
+    />
+    <meta property="og:image" content="/og.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <canvas id="scene" aria-label="3D view of the booster’s engines. Drag to orbit, scroll or pinch to zoom, click an engine to shut it down."></canvas>
+    <div class="scrim" aria-hidden="true"></div>
+
+    <main class="ui">
+      <header class="masthead">
+        <h1>Engine packing</h1>
+        <p class="lede">
+          The densest known ways to fit <var>n</var> equal circles inside a circle, laid out as rocket engines under a
+          9&nbsp;m booster.
+        </p>
+        <p class="credit">
+          Coordinates from <a href="http://www.packomania.com/" target="_blank" rel="noopener">Packomania</a> by Eckard
+          Specht. <a href="https://github.com/danmana/engine-packing" target="_blank" rel="noopener">Source</a>
+        </p>
+      </header>
+
+      <nav class="views" aria-label="Camera and sound">
+        <button type="button" data-view="side" aria-pressed="true">Side</button>
+        <button type="button" data-view="below" aria-pressed="false">Below</button>
+        <button type="button" id="sound" aria-pressed="true">Sound on</button>
+      </nav>
+
+      <section class="readout" aria-label="Layout details">
+        <p class="count"><span id="n" class="numeral">33</span><span id="unit">engines</span></p>
+        <dl class="stats" id="stats"></dl>
+        <p class="note" id="note"></p>
+      </section>
+
+      <div class="switch" id="layout-switch" role="radiogroup" aria-label="Layout for 33 engines" hidden>
+        <button type="button" role="radio" aria-checked="true" data-layout="optimal">Optimal packing</button>
+        <button type="button" role="radio" aria-checked="false" data-layout="rings">Super Heavy rings</button>
+      </div>
+
+      <aside class="plan-wrap" aria-label="Engine plan">
+        <svg id="plan" viewBox="-1.1 -1.1 2.2 2.2" role="img"></svg>
+        <p class="caption">Seen from below. Click an engine to shut it down.</p>
+      </aside>
+
+      <div class="actions">
+        <button type="button" id="restore" class="quiet" hidden>Restore engines</button>
+        <button type="button" id="fire" class="fire" aria-pressed="false">
+          <span class="label">Fire engines</span><span class="key" aria-hidden="true">Space</span>
+        </button>
+      </div>
+
+      <div class="ruler">
+        <label class="sr-only" for="count">Number of engines</label>
+        <input id="count" class="sr-only" type="range" min="1" max="100" value="33" />
+        <div class="ticks" id="ticks" aria-hidden="true"></div>
+        <span id="tip" class="tip" aria-hidden="true" hidden></span>
+        <div class="scale" id="scale" aria-hidden="true"></div>
+        <p class="legend">Taller ticks pack denser. Dots mark layouts with perfectly centred thrust.</p>
+      </div>
+    </main>
+
+    <p class="sr-only" id="announce" aria-live="polite"></p>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
