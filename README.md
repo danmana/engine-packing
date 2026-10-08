@@ -82,6 +82,9 @@ The packing table in `src/data/packings.json` is generated from Packomania:
 npm run data -- 100   # fetches cci1..cci100 into scripts/.cache, then rebuilds the JSON
 ```
 
+The social card (`public/og.jpg`) is composed from `scripts/og/og.html`; the
+comment at the top of that file explains how to regenerate it.
+
 The script works out contacts, rattlers (circles whose contacts don't pin them
 in place, removed iteratively), symmetry, and the thrust centre at full
 precision. Its rattler count reproduces the list of rigid packings on Wikipedia
