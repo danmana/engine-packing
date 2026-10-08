@@ -39,6 +39,23 @@ export function symmetryOf(p: Packing) {
 
 const OPTIMAL_33 = PACKINGS[32].r;
 
+// Storage can be unavailable (private mode, blocked site data); the default then applies.
+function remembered(key: string) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function remember(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // ignore
+  }
+}
+
 export class Ui {
   private ticks: HTMLElement[] = [];
   private tip = $('#tip');
@@ -48,6 +65,8 @@ export class Ui {
   private restoreBtn = $<HTMLButtonElement>('#restore');
   private soundBtn = $<HTMLButtonElement>('#sound');
   private layoutSwitch = $('#layout-switch');
+  private readout = $('#readout');
+  private detailsToggle = $<HTMLButtonElement>('#details-toggle');
   private announceTimer = 0;
 
   constructor(private on: UiHandlers) {
@@ -56,6 +75,8 @@ export class Ui {
     this.fireBtn.addEventListener('click', () => on.fire());
     this.restoreBtn.addEventListener('click', () => on.restore());
     this.soundBtn.addEventListener('click', () => on.sound());
+    this.detailsToggle.addEventListener('click', () => this.setDetails(!this.readout.classList.contains('open')));
+    this.setDetails(remembered('details-open') === '1');
     document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((b) =>
       b.addEventListener('click', () => on.view(b.dataset.view as View))
     );
@@ -130,6 +151,14 @@ export class Ui {
     $('#n').textContent = String(n);
     $('#unit').textContent = n === 1 ? 'engine' : 'engines';
     this.layoutSwitch.hidden = n !== 33;
+  }
+
+  /** Phones only: show or hide the stats under the engine count. */
+  setDetails(open: boolean) {
+    this.readout.classList.toggle('open', open);
+    this.detailsToggle.setAttribute('aria-expanded', String(open));
+    this.detailsToggle.textContent = open ? 'Hide details' : 'Show details';
+    remember('details-open', open ? '1' : '0');
   }
 
   setFiring(on: boolean) {

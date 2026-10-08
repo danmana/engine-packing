@@ -252,6 +252,11 @@ a:hover {
   text-align: right;
 }
 
+/* Only phones collapse the details; elsewhere they're always shown. */
+.details-toggle {
+  display: none;
+}
+
 /* Controls ---------------------------------------------------------------- */
 
 button {
@@ -587,6 +592,52 @@ button {
 
   .numeral {
     font-size: 64px;
+  }
+
+  .count-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .details-toggle {
+    display: inline-block;
+    margin: 0 0 -8px;
+    padding: 8px 0;
+    white-space: nowrap;
+    background: none;
+    border: 0;
+    font-size: 13px;
+    font-weight: 520;
+    color: var(--cream-dim);
+    text-decoration: underline;
+    text-decoration-color: rgba(247, 233, 212, 0.4);
+    text-underline-offset: 3px;
+  }
+
+  /* Collapses to zero height; visibility keeps hidden stats out of the tab order. */
+  .details {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      grid-template-rows 0.26s ease,
+      opacity 0.2s ease,
+      visibility 0s linear 0.26s;
+  }
+
+  .readout.open .details {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .details-inner {
+    min-height: 0;
+    overflow: hidden;
   }
 
   .stats {

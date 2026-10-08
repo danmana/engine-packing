@@ -44,10 +44,19 @@
         <button type="button" id="sound" aria-pressed="true">Sound on</button>
       </nav>
 
-      <section class="readout" aria-label="Layout details">
-        <p class="count"><span id="n" class="numeral">33</span><span id="unit">engines</span></p>
-        <dl class="stats" id="stats"></dl>
-        <p class="note" id="note"></p>
+      <section class="readout" id="readout" aria-label="Layout details">
+        <div class="count-row">
+          <p class="count"><span id="n" class="numeral">33</span><span id="unit">engines</span></p>
+          <button type="button" id="details-toggle" class="details-toggle" aria-expanded="false" aria-controls="details">
+            Show details
+          </button>
+        </div>
+        <div class="details" id="details">
+          <div class="details-inner">
+            <dl class="stats" id="stats"></dl>
+            <p class="note" id="note"></p>
+          </div>
+        </div>
       </section>
 
       <div class="switch" id="layout-switch" role="radiogroup" aria-label="Layout for 33 engines" hidden>
