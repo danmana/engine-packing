@@ -1,5 +1,7 @@
 # Engine packing
 
+**Live: https://engine-packing.vercel.app**
+
 What would a rocket booster look like if its engines were laid out by the
 mathematically densest way to pack *n* equal circles inside a circle?
 

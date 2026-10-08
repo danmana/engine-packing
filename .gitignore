@@ -3,3 +3,4 @@ dist
 scripts/.cache
 .vercel
 .DS_Store
+.env*
