@@ -83,7 +83,9 @@ npm run data -- 100   # fetches cci1..cci100 into scripts/.cache, then rebuilds 
 ```
 
 The social card (`public/og.jpg`) is composed from `scripts/og/og.html`; the
-comment at the top of that file explains how to regenerate it.
+comment at the top of that file explains how to regenerate it. The demo video
+is recorded frame by frame by `scripts/demo/record.mjs`, and the thread images
+come from `scripts/thread/images.html`.
 
 The script works out contacts, rattlers (circles whose contacts don't pin them
 in place, removed iteratively), symmetry, and the thrust centre at full

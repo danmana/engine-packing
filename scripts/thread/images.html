@@ -1,0 +1,181 @@
+<!doctype html>
+<!--
+  Supporting images for the launch thread. With `npm run dev` running, open
+  /scripts/thread/images.html#rockets or #gallery at 1600 × 900 and screenshot.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Engine packing thread images</title>
+    <style>
+      :root {
+        --cream: #f7e9d4;
+        --cream-dim: rgba(247, 233, 212, 0.72);
+        --steel: #a3b1c8;
+        --lilac: #b9a6f4;
+        --ember: #f2a25c;
+        --font: 'Archivo Variable', system-ui, sans-serif;
+      }
+
+      html,
+      body {
+        margin: 0;
+        background: #061847;
+      }
+
+      .card {
+        width: 1600px;
+        height: 900px;
+        box-sizing: border-box;
+        padding: 64px 80px 56px;
+        display: flex;
+        flex-direction: column;
+        font-family: var(--font);
+        color: var(--cream);
+        background:
+          radial-gradient(120% 90% at 50% 0%, rgba(26, 71, 150, 0.55) 0, rgba(6, 24, 71, 0) 70%),
+          linear-gradient(#0a2560, #061238);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 46px;
+        font-weight: 560;
+        font-stretch: 112%;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+      }
+
+      .sub {
+        margin: 14px 0 0;
+        max-width: 70ch;
+        font-size: 20px;
+        line-height: 1.45;
+        color: var(--cream-dim);
+      }
+
+      .foot {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 18px;
+        color: var(--steel);
+      }
+
+      .foot b {
+        font-weight: 620;
+        font-stretch: 118%;
+        color: var(--cream);
+      }
+
+      /* Rockets vs optimal */
+      .rockets {
+        margin-top: 44px;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 24px;
+      }
+
+      .rocket h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 560;
+        font-stretch: 108%;
+      }
+
+      .rocket .n {
+        margin: 4px 0 14px;
+        font-size: 16px;
+        color: var(--steel);
+      }
+
+      .rocket .label {
+        margin: 8px 0 18px;
+        font-size: 16px;
+        color: var(--cream-dim);
+      }
+
+      .rocket .label em {
+        font-style: normal;
+        font-weight: 620;
+        color: var(--ember);
+      }
+
+      .bay {
+        fill: rgba(3, 11, 34, 0.55);
+        stroke: rgba(247, 233, 212, 0.55);
+        stroke-width: 1.4px;
+      }
+
+      .engine {
+        fill: var(--cream);
+      }
+
+      .real .engine {
+        fill: var(--steel);
+      }
+
+      /* Gallery */
+      .gallery {
+        margin-top: 34px;
+        display: grid;
+        grid-template-columns: repeat(20, 1fr);
+        gap: 26px 8px;
+      }
+
+      .cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+        color: var(--steel);
+      }
+
+      .cell.rocket-n {
+        color: var(--ember);
+      }
+
+      .cell.rocket-n .bay {
+        stroke: var(--ember);
+        stroke-width: 2px;
+      }
+
+      .dot {
+        fill: var(--lilac);
+      }
+
+      .legend {
+        display: flex;
+        gap: 28px;
+      }
+
+      .legend span::before {
+        content: '';
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 8px;
+        border-radius: 50%;
+        vertical-align: 0;
+      }
+
+      .legend .k-rocket::before {
+        border: 2px solid var(--ember);
+        width: 8px;
+        height: 8px;
+      }
+
+      .legend .k-balanced::before {
+        background: var(--lilac);
+      }
+    </style>
+    <script type="module" src="./images.ts"></script>
+  </head>
+  <body>
+    <main id="card" class="card"></main>
+  </body>
+</html>

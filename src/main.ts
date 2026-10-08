@@ -181,10 +181,7 @@ window.addEventListener('hashchange', () => {
 /** Fire light intensity (candela) at full thrust. */
 const FIRE_LIGHT = 80;
 const sun = new THREE.Vector3();
-let last = performance.now();
-function frame(t: number) {
-  const dt = Math.min((t - last) / 1000, 0.1);
-  last = t;
+function tick(dt: number) {
   now += dt;
 
   engines.update(now, dt);
@@ -193,6 +190,24 @@ function frame(t: number) {
   smoke.update(dt, stage.camera, engines.thrust, engines.exitY, stage.sunInView(sun));
   rumble.update(engines.thrust);
   stage.render(dt, now, reduceMotion ? 0 : engines.thrust);
+}
+
+// With ?capture in dev (or a `--mode capture` build), a recording script steps
+// time one frame at a time (scripts/demo/record.mjs), so the video is smooth
+// whatever the render speed.
+const canCapture = import.meta.env.DEV || import.meta.env.MODE === 'capture';
+if (canCapture && new URLSearchParams(location.search).has('capture')) {
+  stage.adaptive = false;
+  stage.grain = 0;
+  Object.assign(window, {
+    __capture: { step: tick, stage },
+  });
+} else {
+  let last = performance.now();
+  const frame = (t: number) => {
+    tick(Math.min((t - last) / 1000, 0.1));
+    last = t;
+    requestAnimationFrame(frame);
+  };
   requestAnimationFrame(frame);
 }
-requestAnimationFrame(frame);

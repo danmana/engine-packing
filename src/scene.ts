@@ -115,6 +115,7 @@ const finishShader = {
     tDiffuse: { value: null },
     uTime: { value: 0 },
     uAspect: { value: 1 },
+    uGrain: { value: 0.035 },
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -124,6 +125,7 @@ const finishShader = {
     uniform sampler2D tDiffuse;
     uniform float uTime;
     uniform float uAspect;
+    uniform float uGrain;
     varying vec2 vUv;
     float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233)) + uTime) * 43758.5453); }
     void main() {
@@ -131,7 +133,7 @@ const finishShader = {
       vec2 q = (vUv - 0.5) * vec2(uAspect, 1.0);
       float vig = smoothstep(1.25, 0.35, length(q));
       c.rgb *= mix(0.72, 1.0, vig);
-      c.rgb += (hash(vUv * 1000.0) - 0.5) * 0.035;
+      c.rgb += (hash(vUv * 1000.0) - 0.5) * uGrain;
       gl_FragColor = c;
     }
   `,
@@ -252,8 +254,17 @@ export class Stage {
   private frames = 0;
   private pixelRatio = Math.min(window.devicePixelRatio, 1.75);
 
+  /** Off while recording, where frame time says nothing about the device. */
+  adaptive = true;
+
+  /** Film grain strength; recordings turn it off to save bitrate. */
+  set grain(amount: number) {
+    this.finish.uniforms.uGrain.value = amount;
+  }
+
   /** Drop resolution on slow devices instead of dropping frames. */
   private adapt(dt: number) {
+    if (!this.adaptive) return;
     // Skip the first frames, which include shader compilation.
     if (++this.frames < 120) return;
     this.frameTimes.push(dt);

@@ -141,7 +141,10 @@ const fragmentShader = /* glsl */ `
     }
     // Soft per-plume saturation: side views stay linear, end-on views don't blow out.
     vec3 outCol = acc * power * uIntensity;
-    outCol /= 1.0 + dot(outCol, vec3(0.333)) * 0.9;
+    // Looking up the axis, the ray runs the whole plume length; compress harder
+    // there so big engines seen from below glow without washing out.
+    float alongAxis = pow(abs(rd.y), 4.0);
+    outCol /= 1.0 + dot(outCol, vec3(0.333)) * mix(0.9, 4.0, alongAxis);
     gl_FragColor = vec4(outCol, 1.0);
   }
 `;

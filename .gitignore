@@ -4,3 +4,5 @@ scripts/.cache
 .vercel
 .DS_Store
 .env*
+.capture
+.record.log
