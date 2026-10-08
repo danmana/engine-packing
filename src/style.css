@@ -488,6 +488,12 @@ button {
   background: var(--lilac);
 }
 
+.ticks i.landmark {
+  width: 2px;
+  background: var(--ember);
+  opacity: 1;
+}
+
 .ticks i.hover {
   opacity: 1;
   background: var(--cream-dim);
@@ -500,7 +506,49 @@ button {
   opacity: 1;
 }
 
-.ruler:focus-within .ticks {
+.ruler-label {
+  position: absolute;
+  top: -28px;
+  padding: 2px 0 2px 7px;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 560;
+  font-stretch: 106%;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--cream);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  text-shadow: 0 1px 10px rgba(3, 11, 34, 0.55);
+  transition:
+    opacity 0.2s,
+    text-decoration-color 0.2s;
+}
+
+/* Leader line from the label down to the 33 tick. */
+.ruler-label::before {
+  content: '';
+  position: absolute;
+  left: -0.5px;
+  top: 4px;
+  width: 1px;
+  height: 22px;
+  background: var(--ember);
+}
+
+.ruler-label:hover {
+  text-decoration-color: rgba(247, 233, 212, 0.5);
+}
+
+.ruler-label.faded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Keyboard focus on the hidden range input shows on the ticks. */
+.ruler:has(#count:focus-visible) .ticks {
   outline: 2px solid var(--lilac);
   outline-offset: 6px;
 }
@@ -693,6 +741,16 @@ button {
 
   .legend {
     display: none;
+  }
+
+  /* Bigger tap target, same visual position. */
+  .ruler-label {
+    top: -36px;
+    padding: 10px 10px 10px 7px;
+  }
+
+  .ruler-label::before {
+    top: 12px;
   }
 
   .scale span:nth-child(even) {

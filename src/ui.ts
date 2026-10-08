@@ -37,7 +37,9 @@ export function symmetryOf(p: Packing) {
   return mirrored ? 'Mirror only' : 'None';
 }
 
-const OPTIMAL_33 = PACKINGS[32].r;
+/** Super Heavy flies 33 engines; the ruler marks that count. */
+const SUPER_HEAVY = 33;
+const OPTIMAL_33 = PACKINGS[SUPER_HEAVY - 1].r;
 
 // Storage can be unavailable (private mode, blocked site data); the default then applies.
 function remembered(key: string) {
@@ -58,6 +60,7 @@ function remember(key: string, value: string) {
 
 export class Ui {
   private ticks: HTMLElement[] = [];
+  private landmark = document.createElement('button');
   private tip = $('#tip');
   private range = $<HTMLInputElement>('#count');
   private plan = $<SVGSVGElement>('#plan');
@@ -101,6 +104,16 @@ export class Ui {
       ticks.append(t);
       this.ticks.push(t);
     });
+    // A labelled marker so people can find the real booster's engine count.
+    this.ticks[SUPER_HEAVY - 1].classList.add('landmark');
+    this.landmark.type = 'button';
+    this.landmark.className = 'ruler-label';
+    this.landmark.textContent = 'Super Heavy';
+    this.landmark.setAttribute('aria-label', `Go to ${SUPER_HEAVY} engines, the count on Super Heavy`);
+    this.landmark.style.left = `${((SUPER_HEAVY - 0.5) / MAX_N) * 100}%`;
+    this.landmark.addEventListener('click', () => this.on.count(SUPER_HEAVY));
+    ticks.before(this.landmark);
+
     for (const n of [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].filter((n) => n <= MAX_N)) {
       const s = document.createElement('span');
       s.textContent = String(n);
@@ -118,6 +131,8 @@ export class Ui {
     const hover = (n: number) => {
       if (hovered >= 0) this.ticks[hovered - 1]?.classList.remove('hover');
       hovered = n;
+      // Step the label aside while the hover number is close to it.
+      this.landmark.classList.toggle('faded', n > 0 && Math.abs(n - SUPER_HEAVY) <= 6);
       if (n < 0) {
         this.tip.hidden = true;
         return;
@@ -150,7 +165,8 @@ export class Ui {
     this.range.value = String(n);
     $('#n').textContent = String(n);
     $('#unit').textContent = n === 1 ? 'engine' : 'engines';
-    this.layoutSwitch.hidden = n !== 33;
+    this.layoutSwitch.hidden = n !== SUPER_HEAVY;
+    this.landmark.classList.toggle('on', n === SUPER_HEAVY);
   }
 
   /** Phones only: show or hide the stats under the engine count. */
