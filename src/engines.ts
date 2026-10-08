@@ -22,9 +22,10 @@ interface Slot {
   r: number;
   s: number;
   power: number;
+  /** Commanded on; it lights once `now` passes `ignite`. */
+  on: boolean;
   ignite: number;
   litAt: number;
-  out: boolean;
   seed: number;
 }
 
@@ -54,7 +55,6 @@ export const plumeLength = (exitRadius: number) => 10 + exitRadius * 15;
 export class EngineCluster {
   readonly group = new THREE.Group();
   readonly plumeMat: THREE.ShaderMaterial;
-  firing = false;
   /** Fraction of full thrust currently produced, 0..1. */
   thrust = 0;
   /** Mean nozzle exit height, used to place lights and smoke. */
@@ -192,17 +192,14 @@ export class EngineCluster {
         r: p.r,
         s: 0,
         power: 0,
-        ignite: now + 0.15 + this.rand() * 0.25,
+        on: false,
+        ignite: 0,
         litAt: -1,
-        out: false,
         seed: this.rand() * 10,
       };
       this.slots.push(slot);
     });
-    for (const s of this.slots) {
-      s.out = false;
-      if (instant) s.t0 = -1e9;
-    }
+    if (instant) for (const s of this.slots) s.t0 = -1e9;
   }
 
   private retarget(s: Slot, key: number, x: number, y: number, r: number, presence: number, now: number) {
@@ -210,23 +207,25 @@ export class EngineCluster {
     s.to = [x, y, r, presence];
     s.t0 = now;
     s.key = key;
+    if (key < 0) s.on = false;
   }
 
-  setFiring(on: boolean, now: number) {
-    if (on === this.firing) return;
-    this.firing = on;
-    if (!on) return;
-    // Light up from the centre outwards, like a real start sequence.
+  /**
+   * Turn engines on or off by packing index. With `sequence`, engines that
+   * start light up from the centre outwards, like a real start sequence.
+   */
+  setLit(keys: ReadonlySet<number>, now: number, sequence = false) {
     const live = this.slots.filter((s) => s.key >= 0);
     const maxD = Math.max(1e-6, ...live.map((s) => Math.hypot(s.to[0], s.to[1])));
     for (const s of live) {
-      s.ignite = now + 0.12 + (Math.hypot(s.to[0], s.to[1]) / maxD) * 1.1 + this.rand() * 0.12;
+      const on = keys.has(s.key);
+      if (on && !s.on) {
+        s.ignite = sequence
+          ? now + 0.12 + (Math.hypot(s.to[0], s.to[1]) / maxD) * 1.1 + this.rand() * 0.12
+          : now + 0.04 + this.rand() * 0.08;
+      }
+      s.on = on;
     }
-  }
-
-  setOut(key: number, out: boolean) {
-    const s = this.slots.find((s) => s.key === key);
-    if (s) s.out = out;
   }
 
   update(now: number, dt: number) {
@@ -239,7 +238,7 @@ export class EngineCluster {
       s.r = s.from[2] + (s.to[2] - s.from[2]) * e;
       s.s = s.from[3] + (s.to[3] - s.from[3]) * e;
 
-      const want = this.firing && s.key >= 0 && !s.out && now >= s.ignite;
+      const want = s.on && s.key >= 0 && now >= s.ignite;
       if (want && s.litAt < 0) s.litAt = now;
       if (!want) s.litAt = -1;
       s.power = want ? Math.min(1, s.power + dt / 0.3) : Math.max(0, s.power - dt / 0.5);
@@ -249,9 +248,9 @@ export class EngineCluster {
     // Thrust centre of the engines that should be running, metres.
     const target = new THREE.Vector2();
     let running = 0;
-    if (this.firing && p) {
+    if (p) {
       for (const s of this.slots) {
-        if (s.key < 0 || s.out) continue;
+        if (s.key < 0 || !s.on) continue;
         target.x += s.to[0];
         target.y += s.to[1];
         running++;

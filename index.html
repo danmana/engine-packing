@@ -22,7 +22,7 @@
     <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
-    <canvas id="scene" aria-label="3D view of the booster’s engines. Drag to orbit, scroll or pinch to zoom, click an engine to shut it down."></canvas>
+    <canvas id="scene" aria-label="3D view of the booster’s engines. Drag to orbit, scroll or pinch to zoom, click an engine to turn it on or off."></canvas>
     <div class="scrim" aria-hidden="true"></div>
 
     <main class="ui">
@@ -66,11 +66,11 @@
 
       <aside class="plan-wrap" aria-label="Engine plan">
         <svg id="plan" viewBox="-1.1 -1.1 2.2 2.2" role="img"></svg>
-        <p class="caption">Seen from below. Click an engine to shut it down.</p>
+        <p class="caption">Seen from below. Click an engine to turn it on or off.</p>
       </aside>
 
       <div class="actions">
-        <button type="button" id="restore" class="quiet" hidden>Restore engines</button>
+        <button type="button" id="fire-all" class="quiet" hidden>Fire all engines</button>
         <button type="button" id="fire" class="fire" aria-pressed="false">
           <span class="label">Fire engines</span><span class="key" aria-hidden="true">Space</span>
         </button>

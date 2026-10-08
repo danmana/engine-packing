@@ -86,24 +86,27 @@ export interface Balance {
   gimbal: number;
 }
 
-export function balanceOf(p: Packing, out: ReadonlySet<number>): Balance {
+/**
+ * Balance of the engines that are on. With none or all of them on, this is
+ * the layout's own balance, from full-precision coordinates.
+ */
+export function balanceOf(p: Packing, on: ReadonlySet<number>): Balance {
   let [cx, cy] = p.offset;
   let active = p.n;
-  if (out.size) {
+  const partial = on.size > 0 && on.size < p.n;
+  if (partial) {
     cx = cy = active = 0;
-    for (let i = 0; i < p.n; i++) {
-      if (out.has(i)) continue;
+    for (const i of on) {
       cx += p.pts[2 * i];
       cy += p.pts[2 * i + 1];
       active++;
     }
-    if (active === 0) return { active, cx: 0, cy: 0, offset: 0, gimbal: 0 };
     cx /= active;
     cy /= active;
   }
   let d = Math.hypot(cx, cy);
   // Stored coordinates are rounded to 1e-7, so smaller offsets are noise.
-  if (out.size && d < 2e-7) {
+  if (partial && d < 2e-7) {
     cx = cy = d = 0;
   }
   const offset = d * BAY_RADIUS;

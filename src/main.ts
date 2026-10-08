@@ -22,8 +22,8 @@ const rings = superHeavyRings();
 const state = {
   n: initialCount(),
   layout: 'optimal' as Packing['kind'],
-  out: new Set<number>(),
-  firing: false,
+  /** Engines that are on, by packing index. Empty means shut down. */
+  lit: new Set<number>(),
   sound: true,
 };
 let now = 0;
@@ -35,14 +35,20 @@ function initialCount() {
 
 const packing = () => (state.n === 33 && state.layout === 'rings' ? rings : PACKINGS[state.n - 1]);
 
+const allEngines = () => new Set(Array.from({ length: packing().n }, (_, i) => i));
+
 function refresh() {
   const p = packing();
-  ui.render(p, balanceOf(p, state.out), state.out);
+  ui.render(p, balanceOf(p, state.lit), state.lit);
+  ui.setFiring(state.lit.size > 0);
 }
 
 function applyLayout(instant = false) {
-  state.out.clear();
+  // A running rocket keeps running on the new layout, with every engine on.
+  const running = state.lit.size > 0;
   engines.setLayout(packing(), now, instant);
+  state.lit = running ? allEngines() : new Set();
+  engines.setLit(state.lit, now);
   ui.setCount(state.n);
   refresh();
   history.replaceState(null, '', `#${state.n}`);
@@ -55,23 +61,26 @@ function setCount(n: number) {
   applyLayout();
 }
 
+/** Fire every engine, or shut everything down if anything is running. */
 function toggleFire() {
   rumble.wake();
-  state.firing = !state.firing;
-  engines.setFiring(state.firing, now);
-  ui.setFiring(state.firing);
-}
-
-function toggleEngine(i: number) {
-  if (state.out.has(i)) state.out.delete(i);
-  else state.out.add(i);
-  engines.setOut(i, state.out.has(i));
+  state.lit = state.lit.size ? new Set() : allEngines();
+  engines.setLit(state.lit, now, true);
   refresh();
 }
 
-function restoreEngines() {
-  for (const i of state.out) engines.setOut(i, false);
-  state.out.clear();
+function fireAll() {
+  rumble.wake();
+  state.lit = allEngines();
+  engines.setLit(state.lit, now, true);
+  refresh();
+}
+
+function toggleEngine(i: number) {
+  rumble.wake();
+  if (state.lit.has(i)) state.lit.delete(i);
+  else state.lit.add(i);
+  engines.setLit(state.lit, now);
   refresh();
 }
 
@@ -86,11 +95,11 @@ const ui = new Ui({
   sound() {
     state.sound = !state.sound;
     rumble.enabled = state.sound;
-    if (state.sound && state.firing) rumble.wake();
+    if (state.sound && state.lit.size) rumble.wake();
     ui.setSound(state.sound);
   },
   toggleEngine,
-  restore: restoreEngines,
+  fireAll,
   layout(kind) {
     if (kind === state.layout) return;
     state.layout = kind;
@@ -148,8 +157,8 @@ window.addEventListener('keydown', (e) => {
   } else if ((e.key === 'ArrowLeft' || e.key === 'ArrowDown') && !el.closest('input')) {
     e.preventDefault();
     setCount(state.n - 1);
-  } else if (e.key === 'r' && !inControl && state.out.size) {
-    restoreEngines();
+  } else if (e.key === 'a' && !inControl && state.lit.size < packing().n) {
+    fireAll();
   }
 });
 

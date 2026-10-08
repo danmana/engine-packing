@@ -10,7 +10,8 @@ mathematically densest way to pack *n* equal circles inside a circle?
 Scrub through every best-known packing from 1 to 100 circles and see each one
 as a cluster of rocket engines under a 9 m stainless steel booster. Fire them,
 orbit around, and check whether the layout is balanced. Shut engines down to
-watch the thrust centre move and the rest gimbal to compensate.
+watch the thrust centre move and the rest gimbal to compensate, or light them
+one at a time from cold.
 
 ## What it shows
 
@@ -38,8 +39,8 @@ watch the thrust centre move and the rest gimbal to compensate.
 | Change the engine count | Drag the ruler, or press ← / →               |
 | Fire or shut down      | The Fire button, or Space                    |
 | Orbit and zoom         | Drag and scroll (pinch on touch)             |
-| Shut one engine down   | Click it in 3D or on the plan                |
-| Restore all engines    | The Restore button, or R                     |
+| Turn one engine on/off | Click it in 3D or on the plan                |
+| Fire all engines       | The Fire all button, or A                    |
 | Jump to a layout       | Link to `#n`, for example `/#61`             |
 
 ## Development

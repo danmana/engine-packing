@@ -7,7 +7,7 @@ export interface UiHandlers {
   view(v: View): void;
   sound(): void;
   toggleEngine(i: number): void;
-  restore(): void;
+  fireAll(): void;
   layout(kind: Packing['kind']): void;
 }
 
@@ -62,7 +62,7 @@ export class Ui {
   private range = $<HTMLInputElement>('#count');
   private plan = $<SVGSVGElement>('#plan');
   private fireBtn = $<HTMLButtonElement>('#fire');
-  private restoreBtn = $<HTMLButtonElement>('#restore');
+  private fireAllBtn = $<HTMLButtonElement>('#fire-all');
   private soundBtn = $<HTMLButtonElement>('#sound');
   private layoutSwitch = $('#layout-switch');
   private readout = $('#readout');
@@ -73,7 +73,7 @@ export class Ui {
     this.buildRuler();
 
     this.fireBtn.addEventListener('click', () => on.fire());
-    this.restoreBtn.addEventListener('click', () => on.restore());
+    this.fireAllBtn.addEventListener('click', () => on.fireAll());
     this.soundBtn.addEventListener('click', () => on.sound());
     this.detailsToggle.addEventListener('click', () => this.setDetails(!this.readout.classList.contains('open')));
     this.setDetails(remembered('details-open') === '1');
@@ -164,7 +164,6 @@ export class Ui {
   setFiring(on: boolean) {
     this.fireBtn.setAttribute('aria-pressed', String(on));
     this.fireBtn.querySelector('.label')!.textContent = on ? 'Shut down' : 'Fire engines';
-    this.plan.classList.toggle('firing', on);
   }
 
   setSound(on: boolean) {
@@ -178,7 +177,8 @@ export class Ui {
     );
   }
 
-  render(p: Packing, b: Balance, out: ReadonlySet<number>) {
+  render(p: Packing, b: Balance, lit: ReadonlySet<number>) {
+    const partial = lit.size > 0 && lit.size < p.n;
     this.layoutSwitch.querySelectorAll<HTMLButtonElement>('[data-layout]').forEach((el) =>
       el.setAttribute('aria-checked', String(el.dataset.layout === p.kind))
     );
@@ -189,10 +189,10 @@ export class Ui {
       ['Area filled', `${(p.n * p.r * p.r * 100).toFixed(1)} %`],
       ['Symmetry', symmetryOf(p)],
       ['Packing', p.kind === 'rings' ? 'Real-world rings' : p.proven ? 'Proven optimal' : 'Best known'],
-      ['Thrust off-centre', b.active ? formatOffset(b.offset) : '–'],
-      ['Gimbal to correct', b.active ? formatAngle(b.gimbal) : '–'],
+      ['Thrust off-centre', formatOffset(b.offset)],
+      ['Gimbal to correct', formatAngle(b.gimbal)],
     ];
-    if (out.size) rows.push(['Thrust', `${Math.round((b.active / p.n) * 100)} %`]);
+    if (partial) rows.push(['Thrust', `${Math.round((b.active / p.n) * 100)} %`]);
     else if (p.rattlers.length) rows.push(['Rattlers', `${p.rattlers.length} loose`]);
 
     $('#stats').innerHTML = rows
@@ -201,17 +201,16 @@ export class Ui {
 
     let note = `Gimbal assumes the centre of mass sits ${LEVER_ARM} m above the engines.`;
     if (b.gimbal > 10) note = 'That is more gimbal than most engines can manage.';
-    else if (out.size && b.active === 0) note = 'All engines are shut down.';
     else if (p.kind === 'rings')
       note = `Super Heavy’s 3 + 10 + 20 rings, approximated. The optimal packing fits nozzles ${Math.round(
         (OPTIMAL_33 / p.r - 1) * 100
       )} % wider in the same base.`;
-    else if (p.rattlers.length && !out.size)
+    else if (p.rattlers.length && !partial)
       note = 'Rattlers are engines the packing doesn’t lock in place. Where they sit shifts the balance.';
     $('#note').textContent = note;
 
-    this.restoreBtn.hidden = out.size === 0;
-    this.renderPlan(p, b, out);
+    this.fireAllBtn.hidden = !partial;
+    this.renderPlan(p, b, lit);
 
     window.clearTimeout(this.announceTimer);
     this.announceTimer = window.setTimeout(() => {
@@ -221,7 +220,7 @@ export class Ui {
     }, 500);
   }
 
-  private renderPlan(p: Packing, b: Balance, out: ReadonlySet<number>) {
+  private renderPlan(p: Packing, b: Balance, lit: ReadonlySet<number>) {
     const f = (v: number) => v.toFixed(4);
     const parts: string[] = ['<circle class="bay" r="1"/>'];
     for (const a of p.mirrors) {
@@ -238,22 +237,21 @@ export class Ui {
     }
     const rattlers = new Set(p.rattlers);
     for (let i = 0; i < p.n; i++) {
-      const cls = ['engine', rattlers.has(i) ? 'rattler' : '', out.has(i) ? 'out' : ''].join(' ').trim();
+      const cls = ['engine', rattlers.has(i) ? 'rattler' : '', lit.has(i) ? 'lit' : ''].join(' ').trim();
       parts.push(
         `<circle class="${cls}" data-i="${i}" cx="${f(p.pts[2 * i])}" cy="${f(-p.pts[2 * i + 1])}" r="${f(
           p.r * 0.96
-        )}"><title>Engine ${i + 1}${out.has(i) ? ', shut down' : ''}</title></circle>`
+        )}"><title>Engine ${i + 1}, ${lit.has(i) ? 'firing' : 'off'}</title></circle>`
       );
     }
     parts.push('<path class="centre" d="M-0.07 0H0.07M0 -0.07V0.07"/>');
-    if (b.active) {
-      if (b.offset > 0) parts.push(`<line class="lever" x1="0" y1="0" x2="${f(b.cx)}" y2="${f(-b.cy)}"/>`);
-      parts.push(`<circle class="thrust" cx="${f(b.cx)}" cy="${f(-b.cy)}" r="0.032"/>`);
-    }
+    if (b.offset > 0) parts.push(`<line class="lever" x1="0" y1="0" x2="${f(b.cx)}" y2="${f(-b.cy)}"/>`);
+    parts.push(`<circle class="thrust" cx="${f(b.cx)}" cy="${f(-b.cy)}" r="0.032"/>`);
     this.plan.innerHTML = parts.join('');
+    this.plan.classList.toggle('firing', lit.size > 0);
     this.plan.setAttribute(
       'aria-label',
-      `Plan of ${p.n} engines seen from below. ${out.size} shut down. Thrust centre ${formatOffset(b.offset)} from the axis.`
+      `Plan of ${p.n} engines seen from below, ${lit.size} firing. Thrust centre ${formatOffset(b.offset)} from the axis.`
     );
   }
 }

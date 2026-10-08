@@ -427,17 +427,15 @@ button {
   stroke-dasharray: 1.5 2.5;
 }
 
-#plan.firing .engine {
+#plan .engine.lit {
   fill: rgba(255, 226, 190, 0.92);
   filter: drop-shadow(0 0 3px rgba(255, 190, 130, 0.8));
 }
 
-#plan .engine.out,
-#plan.firing .engine.out {
+/* While anything runs, engines that are off step back. */
+#plan.firing .engine:not(.lit) {
   fill: transparent;
-  stroke: var(--steel);
-  opacity: 0.45;
-  filter: none;
+  opacity: 0.5;
 }
 
 #plan .centre {
